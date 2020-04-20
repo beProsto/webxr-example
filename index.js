@@ -1,5 +1,5 @@
 // Polyfill makes it possible to run WebXR on devices that support only WebVR.
-import WebXRPolyfill from "./vendor/webxr-polyfill/webxr-polyfill.module.js";
+import WebXRPolyfill from "https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.module.js";
 let polyfill = new WebXRPolyfill();
 
 // XR globals.
@@ -25,7 +25,6 @@ function createWebGLContext(glAttribs) {
 }
 
 function initXR() {
-	console.log(ezgl.test);
 	if(navigator.xr) {
 		navigator.xr.isSessionSupported("immersive-vr").then(function(supported) {
 			if(supported) {
@@ -65,11 +64,11 @@ function onSessionStarted(session) {
 	gl.bindVertexArray(glObjs.vertexarray);
 
 	const vertices = [
-		-0.5, -0.5, 0.0,
+		-0.5, -0.5, -1.0,
 			1.0, 0.0, 0.0, 1.0,
-		0.0, 0.5, 0.0,
+		0.0, 0.5, -1.0,
 			0.0, 1.0, 0.0, 1.0,
-		0.5, -0.5, 0.0,
+		0.5, -0.5, -1.0,
 			0.0, 0.0, 1.0, 1.0
 	];
 	glObjs.vertexbuffer = gl.createBuffer();
@@ -86,18 +85,21 @@ function onSessionStarted(session) {
 	gl.bindVertexArray(null); /* we have to unbind the vertex array, because WebXR does some vertex layout setting on it's own later, and we don't want it to influence our vertex array */
 	
 	/* Creating and compiling shaders and combining them into a program */
-	const vertCode = '#version 300 es\n\
+	const vertCode = "#version 300 es\n\
 	precision mediump float;\n\
 	\n\
 	layout(location = 0) in vec3 a_Position;\n\
 	layout(location = 1) in vec4 a_Color;\n\
 	\n\
+	uniform mat4 u_Projection;\n\
+	uniform mat4 u_View;\n\
+	\n\
 	out vec4 v_Color;\n\
 	\n\
 	void main() {\n\
-		gl_Position = vec4(a_Position, 1.0);\n\
+		gl_Position = u_Projection * u_View * vec4(a_Position, 1.0);\n\
 		v_Color = a_Color;\n\
-	}';
+	}";
 	let vertShader = gl.createShader(gl.VERTEX_SHADER);
 	gl.shaderSource(vertShader, vertCode);
 	gl.compileShader(vertShader);
@@ -149,6 +151,11 @@ function onXRFrame(t, frame) {
 			gl.useProgram(glObjs.program);
 			gl.bindVertexArray(glObjs.vertexarray);
 			gl.bindBuffer(gl.ARRAY_BUFFER, glObjs.vertexbuffer);
+
+			let pLoc = gl.getUniformLocation(glObjs.program, "u_Projection");
+			gl.uniformMatrix4fv(pLoc, false, view.projectionMatrix);
+			let vLoc = gl.getUniformLocation(glObjs.program, "u_View");
+			gl.uniformMatrix4fv(vLoc, false, view.transform.inverse.matrix);
 
 			gl.drawArrays(gl.TRIANGLES, 0, 3);
 
