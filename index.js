@@ -76,7 +76,7 @@ function onSessionStarted(session) {
 			controllerVertexBuffer.vertexData(verticesLoaded);
 		});
 	});	
-	
+
 	controllerVertexBuffer2 = new ezgl.VertexBuffer();
 	controllerVertexBuffer2.vertexLayout([3, 2, 3]);
 	controllerVertexBuffer2.vertexData(vertices);
@@ -103,10 +103,10 @@ function onSessionStarted(session) {
 			0.0, 0.0,
 	];
 
-
 	groundVertexBuffer = new ezgl.VertexBuffer();
 	groundVertexBuffer.vertexLayout([3, 2]);
 	groundVertexBuffer.vertexData(vertices2);
+
 
 	const vertCode = "#version 300 es\n\
 	precision mediump float;\n\
