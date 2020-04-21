@@ -15,6 +15,9 @@ let groundVertexBuffer = null;
 let groundTexture = null;
 let controllers = [];
 
+// A simple default triangle
+const vertices = ezobj.load("v 0.0 0.0 0.0\nv 0.0 1.0 0.0\nv 1.0 1.0 0.0\nvt 0.0 0.0\nvt 0.5 1.0\nvt 1.0 0.0\nvn 0.0 0.0 1.0\nf 1/1/1 2/2/1 3/3/1");
+
 // Creates html canvas element and returns it's WebGL 2 context.
 function createWebGLContext(glAttribs) {
 	glAttribs = glAttribs || {alpha: false};
@@ -47,9 +50,6 @@ function onButtonClicked() {
 		xrSession.end();
 	}
 }
-
-const objstr = "v 0.0 0.0 0.0\nv 0.0 1.0 0.0\nv 1.0 1.0 0.0\nvt 0.0 0.0\nvt 0.5 1.0\nvt 1.0 0.0\nvn 0.0 0.0 1.0\nf 1/1/1 2/2/1 3/3/1";
-const vertices = ezobj.load(objstr);
 
 function onSessionStarted(session) {
 	xrSession = session;
