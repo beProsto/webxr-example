@@ -8,7 +8,6 @@ let xrSession = null;
 let xrRefSpace = null;
 
 let shader = null;
-
 let controllerVertexBuffer = null;
 let controllerTexture = null;
 let groundVertexBuffer = null;
@@ -48,6 +47,10 @@ function onButtonClicked() {
 	}
 }
 
+const objstr = 
+"v 0.0 0.0 0.0\nv 0.0 1.0 0.0\nv 1.0 1.0 0.0\nvt 0.0 0.0\nvt 0.5 1.0\nvt 1.0 0.0\nvn 0.0 0.0 1.0\nf 1/1/1 2/2/1 3/3/1";
+const vertices = ezobj.load(objstr);
+console.log(vertices);
 function onSessionStarted(session) {
 	xrSession = session;
 	session.addEventListener("end", onSessionEnded);
@@ -64,14 +67,7 @@ function onSessionStarted(session) {
 	});
 
 	/* Creating the vertex buffer and setting up the vertex layout */
-	const vertices = [
-		-0.15, 0.10, 0.10,
-			0.0, 0.0,
-		0.0, -0.10, -0.10,
-			0.5, 1.0,
-		0.15, 0.10, 0.10,
-			1.0, 0.0
-	];
+	
 	const vertices2 = [
 		-1.0, -1.0, -1.0,
 			0.0, 0.0,
@@ -89,7 +85,7 @@ function onSessionStarted(session) {
 	];
 
 	controllerVertexBuffer = new ezgl.VertexBuffer();
-	controllerVertexBuffer.vertexLayout([3, 2]);
+	controllerVertexBuffer.vertexLayout([3, 2, 3]);
 	controllerVertexBuffer.vertexData(vertices);
 
 	groundVertexBuffer = new ezgl.VertexBuffer();
@@ -101,6 +97,7 @@ function onSessionStarted(session) {
 	\n\
 	layout(location = 0) in vec3 a_Position;\n\
 	layout(location = 1) in vec2 a_TexCoord;\n\
+	layout(location = 2) in vec3 a_Normal;\n\
 	\n\
 	uniform mat4 u_Projection;\n\
 	uniform mat4 u_View;\n\
@@ -162,7 +159,7 @@ function onControllerUpdate(session, frame) {
 		if(inputSource.gripSpace) {
 			let gripPose = frame.getPose(inputSource.gripSpace, xrRefSpace);
 			if(gripPose) {
-				controllers[i] = {pose: gripPose, hand: inputSource.handedness};
+				controllers[i] = {pose: gripPose, hand: inputSource.handedness, gamepad: inputSource.gamepad};
 			}
 		}
 		i++;
