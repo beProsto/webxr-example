@@ -76,6 +76,7 @@ function onSessionStarted(session) {
 			controllerVertexBuffer.vertexData(verticesLoaded);
 		});
 	});	
+	
 	controllerVertexBuffer2 = new ezgl.VertexBuffer();
 	controllerVertexBuffer2.vertexLayout([3, 2, 3]);
 	controllerVertexBuffer2.vertexData(vertices);
