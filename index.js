@@ -14,6 +14,7 @@ let controllerTexture = null;
 let groundVertexBuffer = null;
 let groundTexture = null;
 let controllers = [];
+let playerPosition = [0.0, 0.0, 0.0];
 
 // A simple default triangle
 const vertices = ezobj.load("v 0.0 0.0 0.0\nv 0.0 1.0 0.0\nv 1.0 1.0 0.0\nvt 0.0 0.0\nvt 0.5 1.0\nvt 1.0 0.0\nvn 0.0 0.0 1.0\nf 1/1/1 2/2/1 3/3/1");
@@ -203,12 +204,14 @@ function onXRFrame(t, frame) {
 			c1grip = true;
 		}
 
+		playerPosition[0] += controllers[0].gamepad.axes[2];
+		playerPosition[2] += controllers[0].gamepad.axes[3];
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		
 		gl.clearColor(0.4, 0.7, 0.9, 1.0);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-		
 		for(let view of pose.views) {
 			let viewport = glLayer.getViewport(view);
 			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
@@ -217,16 +220,25 @@ function onXRFrame(t, frame) {
 
 			shader.set1i("u_Texture", 0);
 			shader.set4x4f("u_Projection", view.projectionMatrix);
-			shader.set4x4f("u_View", view.transform.inverse.matrix);
+			let model = glMatrix.mat4.create();
+			let mat = glMatrix.mat4.create();
+			glMatrix.mat4.translate(mat, mat, playerPosition);
+			glMatrix.mat4.multiply(model, mat, view.transform.matrix);
+			glMatrix.mat4.invert(model, model);
+			shader.set4x4f("u_View", model);
 			
 			controllerTexture.bind();
 
-			let model = glMatrix.mat4.create();
-			let mat = glMatrix.mat4.create();
-			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0);
-			glMatrix.mat4.rotateY(mat, mat, -Math.PI / 2.0);
-			glMatrix.mat4.rotateZ(mat, mat, -Math.PI / 8.0);
-			glMatrix.mat4.scale(mat, mat, [0.3, 0.3, -0.3]);
+			model = glMatrix.mat4.create();
+			mat = glMatrix.mat4.create();
+			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0 + Math.PI / 8.0);
+			glMatrix.mat4.rotateY(mat, mat, Math.PI);
+			if(controllers[0].hand == "left") {
+				glMatrix.mat4.scale(mat, mat, [-0.1, 0.1, 0.1]);
+			}
+			else {
+				glMatrix.mat4.scale(mat, mat, [0.1, 0.1, 0.1]);
+			}
 			glMatrix.mat4.multiply(model, controllers[0].pose.transform.matrix, mat);
 			shader.set4x4f("u_Model", model);
 			if(!c0grip) {
@@ -238,10 +250,14 @@ function onXRFrame(t, frame) {
 
 			model = glMatrix.mat4.create();
 			mat = glMatrix.mat4.create();
-			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0);
-			glMatrix.mat4.rotateY(mat, mat, -Math.PI / 2.0);
-			glMatrix.mat4.rotateZ(mat, mat, -Math.PI / 8.0);
-			glMatrix.mat4.scale(mat, mat, [0.3, 0.3, 0.3]);
+			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0 + Math.PI / 8.0);
+			glMatrix.mat4.rotateY(mat, mat, Math.PI);
+			if(controllers[1].hand == "left") {
+				glMatrix.mat4.scale(mat, mat, [-0.1, 0.1, 0.1]);
+			}
+			else {
+				glMatrix.mat4.scale(mat, mat, [0.1, 0.1, 0.1]);
+			}
 			glMatrix.mat4.multiply(model, controllers[1].pose.transform.matrix, mat);
 			shader.set4x4f("u_Model", model);
 			if(!c1grip) {
