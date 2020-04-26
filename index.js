@@ -13,7 +13,7 @@ let controllerVertexBuffer2 = null;
 let controllerTexture = null;
 let groundVertexBuffer = null;
 let groundTexture = null;
-let controllers = [];
+let controllers = {};
 let playerPosition = [0.0, 0.0, 0.0];
 
 // A simple default triangle
@@ -161,12 +161,13 @@ function onSessionStarted(session) {
 
 	gl.enable(gl.DEPTH_TEST);
 }
-function onSessionEnded(event) {
+function onSessionEnded() {
 	xrSession = null;
 	groundTexture.free();
 	controllerTexture.free();
 	shader.free();
 	controllerVertexBuffer.free();
+	controllerVertexBuffer2.free();
 	groundVertexBuffer.free();
 }
 
@@ -176,13 +177,13 @@ function onControllerUpdate(session, frame) {
 		if(inputSource.gripSpace) {
 			let gripPose = frame.getPose(inputSource.gripSpace, xrRefSpace);
 			if(gripPose) {
-				controllers[i] = {pose: gripPose, hand: inputSource.handedness, gamepad: inputSource.gamepad};
+				controllers[inputSource.handedness] = {pose: gripPose, gamepad: inputSource.gamepad};
 			}
 		}
 		i++;
 	}
 }
-
+  
 function onXRFrame(t, frame) {
 	let session = frame.session;
 	session.requestAnimationFrame(onXRFrame);
@@ -194,18 +195,22 @@ function onXRFrame(t, frame) {
 		
 		onControllerUpdate(session, frame);
 
-		let c0grip = false;
-		let c1grip = false;
+		if(controllers.left) {
+			controllers.left.grabbed = false;
+			if(controllers.left.gamepad.buttons[1].value > 0.5) {
+				controllers.left.grabbed = true;
+			}
 
-		if(controllers[0].gamepad.buttons[1].value > 0.5) {
-			c0grip = true;
+			playerPosition[0] += controllers.left.gamepad.axes[2];
+			playerPosition[2] += controllers.left.gamepad.axes[3];
 		}
-		if(controllers[1].gamepad.buttons[1].value > 0.5) {
-			c1grip = true;
+		if(controllers.right) {
+			controllers.right.grabbed = false;
+			if(controllers.right.gamepad.buttons[1].value > 0.5) {
+				controllers.right.grabbed = true;
+			}
 		}
-
-		playerPosition[0] += controllers[0].gamepad.axes[2];
-		playerPosition[2] += controllers[0].gamepad.axes[3];
+		
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		
@@ -228,43 +233,34 @@ function onXRFrame(t, frame) {
 			shader.set4x4f("u_View", model);
 			
 			controllerTexture.bind();
-
-			model = glMatrix.mat4.create();
-			mat = glMatrix.mat4.create();
-			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0 + Math.PI / 8.0);
-			glMatrix.mat4.rotateY(mat, mat, Math.PI);
-			if(controllers[0].hand == "left") {
-				glMatrix.mat4.scale(mat, mat, [-0.1, 0.1, 0.1]);
+			
+			if(controllers.left) {
+				model = glMatrix.mat4.create();
+				mat = glMatrix.mat4.create();
+				glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.5);
+				glMatrix.mat4.scale(mat, mat, [-0.1, 0.125, 0.1]);
+				glMatrix.mat4.multiply(model, controllers.left.pose.transform.matrix, mat);
+				shader.set4x4f("u_Model", model);
+				if(!controllers.left.grabbed) {
+					controllerVertexBuffer.draw();
+				}
+				else {
+					controllerVertexBuffer2.draw();
+				}
 			}
-			else {
-				glMatrix.mat4.scale(mat, mat, [0.1, 0.1, 0.1]);
-			}
-			glMatrix.mat4.multiply(model, controllers[0].pose.transform.matrix, mat);
-			shader.set4x4f("u_Model", model);
-			if(!c0grip) {
-				controllerVertexBuffer.draw();
-			}
-			else {
-				controllerVertexBuffer2.draw();
-			}
-
-			model = glMatrix.mat4.create();
-			mat = glMatrix.mat4.create();
-			glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.0 + Math.PI / 8.0);
-			glMatrix.mat4.rotateY(mat, mat, Math.PI);
-			if(controllers[1].hand == "left") {
-				glMatrix.mat4.scale(mat, mat, [-0.1, 0.1, 0.1]);
-			}
-			else {
-				glMatrix.mat4.scale(mat, mat, [0.1, 0.1, 0.1]);
-			}
-			glMatrix.mat4.multiply(model, controllers[1].pose.transform.matrix, mat);
-			shader.set4x4f("u_Model", model);
-			if(!c1grip) {
-				controllerVertexBuffer.draw();
-			}
-			else {
-				controllerVertexBuffer2.draw();
+			if(controllers.right) {
+				model = glMatrix.mat4.create();
+				mat = glMatrix.mat4.create();
+				glMatrix.mat4.rotateX(mat, mat, -Math.PI / 2.5);
+				glMatrix.mat4.scale(mat, mat, [0.1, 0.125, 0.1]);
+				glMatrix.mat4.multiply(model, controllers.right.pose.transform.matrix, mat);
+				shader.set4x4f("u_Model", model);
+				if(!controllers.right.grabbed) {
+					controllerVertexBuffer.draw();
+				}
+				else {
+					controllerVertexBuffer2.draw();
+				}
 			}
 
 			groundTexture.bind()
