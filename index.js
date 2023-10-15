@@ -71,7 +71,7 @@ function onSessionStarted(session) {
 	controllerVertexBuffer = new ezgl.VertexBuffer();
 	controllerVertexBuffer.vertexLayout([3, 2, 3]);
 	controllerVertexBuffer.vertexData(vertices);
-	fetch("/hand_open.obj").then(response => {
+	fetch("./hand_open.obj").then(response => {
 		response.text().then(text => {
 			const verticesLoaded = ezobj.load(text);
 			controllerVertexBuffer.vertexData(verticesLoaded);
@@ -81,7 +81,7 @@ function onSessionStarted(session) {
 	controllerVertexBuffer2 = new ezgl.VertexBuffer();
 	controllerVertexBuffer2.vertexLayout([3, 2, 3]);
 	controllerVertexBuffer2.vertexData(vertices);
-	fetch("/hand_closed.obj").then(response => {
+	fetch("./hand_closed.obj").then(response => {
 		response.text().then(text => {
 			const verticesLoaded = ezobj.load(text);
 			controllerVertexBuffer2.vertexData(verticesLoaded);
@@ -152,11 +152,11 @@ function onSessionStarted(session) {
 	vS.free();
 
 	controllerTexture = new ezgl.Texture();
-	controllerTexture.fromFile("/tex.png");
+	controllerTexture.fromFile("./tex.png");
 	controllerTexture.bind();
 
 	groundTexture = new ezgl.Texture();
-	groundTexture.fromFile("/tex2.png");
+	groundTexture.fromFile("./tex2.png");
 	groundTexture.bind();
 
 	gl.enable(gl.DEPTH_TEST);
